@@ -1,10 +1,8 @@
+const objectKey = '/';
+const expirationSeconds = 3600;
+
 if (typeof AUTO_TITLE != 'undefined' && AUTO_TITLE == true) {
   document.title = location.hostname;
-}
-
-if (typeof S3_REGION != 'undefined') {
-  var BUCKET_URL = location.protocol + '//' + location.hostname + '.' + S3_REGION + '.amazonaws.com'; // e.g. just 's3' for us-east-1 region
-  var BUCKET_WEBSITE_URL = location.protocol + '//' + location.hostname;
 }
 
 if (typeof S3BL_IGNORE_PATH == 'undefined' || S3BL_IGNORE_PATH != true) {
@@ -33,10 +31,6 @@ if (typeof S3B_ROOT_DIR == 'undefined') {
 
 if (typeof S3B_SORT == 'undefined') {
   var S3B_SORT = 'DEFAULT';
-}
-
-if (typeof S3B_STAT_DIRS == 'undefined' || S3B_STAT_DIRS != true) {
-  var S3B_STAT_DIRS = false;
 }
 
 if (typeof EXCLUDE_FILE == 'undefined') {
@@ -118,11 +112,29 @@ function sortFunction(a, b) {
   }
 }
 
+function generatePresignedURL(bucketName, objectKey, expirationSeconds, R2_ENDPOINT, READ_ONLY_ACCESS_KEY, READ_ONLY_SECRET_KEY) {
+  AWS.config.update({
+    accessKeyId: READ_ONLY_ACCESS_KEY,
+    secretAccessKey: READ_ONLY_SECRET_KEY,
+  });
+
+  const s3 = new AWS.S3({endpoint: R2_ENDPOINT, signatureVersion: 'v4'});
+
+  const params = {
+    Bucket: bucketName,
+    Expires: expirationSeconds,
+  };
+
+  const URL = s3.getSignedUrl('listObjectsV2', params)
+
+  return URL;
+}
+
 function getS3Data(marker, prev) {
   var s3_rest_url = createS3QueryUrl(marker);
   // set loading notice
   $('#listing')
-      .html('<img src="//assets.okfn.org/images/icons/ajaxload-circle.gif" />');
+      .html('<img src="https://assets.okfn.org/images/icons/ajaxload-circle.gif" />');
   $.get(s3_rest_url)
       .done(function(data) {
         // clear loading notice
@@ -166,7 +178,7 @@ function getS3Data(marker, prev) {
 }
 
 function buildNavigation(info) {
-  var baseUrl = S3BL_IGNORE_PATH == false ? '/' : '?prefix=';
+  var baseUrl = S3BL_IGNORE_PATH == false ? '/' : '';
   var root = '<a href="' + baseUrl + '">' + BUCKET_WEBSITE_URL + '</a> / ';
   if (info.prefix) {
     var processedPathSegments = '';
@@ -183,8 +195,8 @@ function buildNavigation(info) {
 }
 
 function createS3QueryUrl(marker) {
-  var s3_rest_url = BUCKET_URL;
-  s3_rest_url += '?delimiter=/';
+  var s3_rest_url = generatePresignedURL(BUCKET_NAME, objectKey, expirationSeconds, R2_ENDPOINT, READ_ONLY_ACCESS_KEY, READ_ONLY_SECRET_KEY);
+  s3_rest_url += '';
 
   //
   // Handling paths and prefixes:
@@ -242,17 +254,10 @@ function getInfoFromS3Data(xml) {
   }
   var directories = $.map(xml.find('CommonPrefixes'), function(item) {
     item = $(item);
-    last_modified = '';
-    if (S3B_STAT_DIRS) {
-        http = new XMLHttpRequest();
-        http.open("HEAD",item.find('Prefix').text(),false);
-        http.send();
-        last_modified = (new Date(http.getResponseHeader("Last-Modified"))).toISOString();
-    }
     // clang-format off
     return {
       Key: item.find('Prefix').text(),
-        LastModified: last_modified,
+        LastModified: '',
         Size: '0',
         Type: 'directory'
     }
@@ -308,7 +313,7 @@ function prepareTable(info) {
     item.keyText = item.Key.substring(prefix.length);
     if (item.Type === 'directory') {
       if (S3BL_IGNORE_PATH) {
-        item.href = location.origin +
+        item.href = location.protocol + '//' + location.hostname +
                     location.pathname + '?prefix=' + encodePath(item.Key);
       } else {
         item.href = encodePath(item.keyText);

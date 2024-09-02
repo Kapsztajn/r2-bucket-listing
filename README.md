@@ -1,8 +1,12 @@
-Create nice directory listings for s3 buckets using only javascript and HTML.
+Create nice directory listings for R2 buckets using only javascript and HTML.
 
 The listing can be deployed on any site and can also be deployed into a bucket.
 
 Inspiration from http://aws.amazon.com/code/Amazon-S3/1713
+
+## Example
+
+Example usage could be found here: https://static.kamilkwiaton.com/
 
 ## Usage
 
@@ -16,23 +20,24 @@ Copy these 4 lines into the HTML file where you want the listing to show up:
 
     <!-- the JS variables for the listing -->
     <script type="text/javascript">
-      // var S3BL_IGNORE_PATH = true;
-      // var BUCKET_NAME = 'BUCKET';
-      // var BUCKET_URL = 'https://BUCKET.s3-REGION.amazonaws.com';
-      // var S3B_ROOT_DIR = 'SUBDIR_L1/SUBDIR_L2/';
-      // var S3B_SORT = 'DEFAULT';
-      // var S3B_STAT_DIRS = false;
-      // var EXCLUDE_FILE = 'index.html';  // change to array to exclude multiple files
-      // var AUTO_TITLE = true;
-      // var S3_REGION = 's3'; // for us-east-1
+        // var S3BL_IGNORE_PATH = true;
+        // var BUCKET_NAME = 'CLOUDFLARE BUCKET';
+        // var R2_ENDPOINT = 'https://S3_API_URL.r2.cloudflarestorage.com';
+        // var BUCKET_WEBSITE_URL = 'BUCKET CUSTOM DOMAIN';
+        // var READ_ONLY_ACCESS_KEY = ''; !!PLEASE TYPE READ ONLY ACCESS KEY!!
+        // var READ_ONLY_SECRET_KEY = ''; !!PLEASE TYPE READ ONLY ACCESS KEY!!
+        // var S3B_ROOT_DIR = 'SUBDIR_L1/SUBDIR_L2/';
+        // var S3B_SORT = 'DEFAULT';
+        // var EXCLUDE_FILE = ["index.html","list.js"];  // change to array to exclude multiple files, regexp also supported e.g. /^(.*\/)?index.html$/ to exclude all index.html
+        // var AUTO_TITLE = true;
     </script>
 
     <!-- the JS to the do the listing -->
-    <script type="text/javascript" src="https://rufuspollock.github.io/s3-bucket-listing/list.js"></script>
+    <script type="text/javascript" src="https://github.com/Kapsztajn/r2-bucket-listing/list.js"></script>
 
 We've provided an example [index.html][index] file you can just copy if you want.
 
-[index]: https://github.com/rufuspollock/s3-bucket-listing/blob/gh-pages/index.html
+[index]: https://github.com/Kapsztajn/r2-bucket-listing/blob/r2/test/index.html
 
 
 ## How it works
@@ -40,7 +45,7 @@ We've provided an example [index.html][index] file you can just copy if you want
 The script downloads your XML bucket listing, parses it and simulates a webserver's text-based directory browsing mode.
 
 
-#### `S3BL_IGNORE_PATH` variable
+### `S3BL_IGNORE_PATH` variable
 
 Valid options = `false` (default) or `true`
 
@@ -52,60 +57,19 @@ You will have to put the html code in your page html AND your error 404 document
 Setting this to true will cause URL navigation to be in this form:
 - _`http://data.openspending.org/index.html?prefix=worldbank/cameroon/`_
 
+### `BUCKET_NAME` variable
 
-#### `BUCKET_URL` variable
+This variable is required.
 
-Valid options = `''` (default) or your _bucket URL_, e.g.
+Type your Bucket name from CloudFlare R2. Only name is needed.
 
-`https://BUCKET.s3-REGION.amazonaws.com` (both http & https are valid)
+### `R2_ENDPOINT` variable
 
-- Do __NOT__ put a trailing '/', e.g. `https://BUCKET.s3-REGION.amazonaws.com/`
-- Do __NOT__ put S3 website URL, e.g. `https://BUCKET.s3-website-REGION.amazonaws.com`
+This variable is required.
 
-This variable tells the script where your bucket XML listing is, and where the files are.
-If the variable is left empty, the script will use the same hostname as the _index.html_.
+Type your S3 API URL which you can find in CloudFlare settings.
 
-
-#### `BUCKET_NAME` variable
-
-Valid options = `''` (default) or your _bucket name_, e.g.
-
-`BUCKET`
-
-This option is designed to support access to S3 buckets in non-website mode,
-via both path-style and virtualhost-style access urls simultaneously, from the
-same index.html file. 
-
-> NOTE: It is *not* recommended to use both BUCKET_URL and BUCKET_NAME in the
-same index.html file.
-
-See the [Amazon
-Documentation](http://docs.aws.amazon.com/AmazonS3/latest/dev/VirtualHosting.html)
-for details on the different url access formats.
-
-The tables below attempt to highlight how BUCKET_NAME affects configuration and
-use cases.
-
-*Without using BUCKET_NAME:*
-
-Configuration | Result | Link
------------- | ----------- | --------
-bucket_url is `undefined`; access url is virtualhost-based | Success | [link](http://listing-test.s3.amazonaws.com/index-null.html)
-bucket_url is `undefined`; access url is path-based | Error (Ok, expected) | [link](http://s3.amazonaws.com/listing-test/index-null.html)
-bucket_url is virtualhost-based; access url is virtualhost-based | Success | [link](http://listing-test.s3.amazonaws.com/index-vh.html)
-bucket_url is virtualhost-based; access url is path-based | Error (Fail) | [link](http://s3.amazonaws.com/listing-test/index-vh.html)
-bucket_url is path-based; access url is virtualhost-based | Error (Fail) | [link](http://listing-test.s3.amazonaws.com/index-path.html)
-bucket_url is path-based; access url is path-based | Success | [link](http://s3.amazonaws.com/listing-test/index-path.html)
-
-*Using BUCKET_NAME to address the two failing configurations from above:*
-
-Configuration | Result | Link
------------- | ----------- | --------
-bucket_name is set; access url is virtualhost-based | Success | [link](http://listing-test.s3.amazonaws.com/index-bucketname.html)
-bucket_name is set; access url is path-based | Success | [link](http://s3.amazonaws.com/listing-test/index-bucketname.html)
-
-
-#### `S3B_ROOT_DIR` variable
+### `S3B_ROOT_DIR` variable
 
 Valid options = `''` (default) or `'SUBDIR_L1/'` or `'SUBDIR_L1/SUBDIR_L2/'` or etc.
 
@@ -116,15 +80,18 @@ This will disallow navigation shallower than your set directory.
 
 Note that this only disallows navigation to shallower directories, but __NOT__ access. Any person with knowledge of the existence of bucket XML listings will be able to manually access those files.
 
-Use Amazon S3 permissions to set granular file permissions.
-
 
 ### `BUCKET_WEBSITE_URL` variable
 
-This variable is optional.  It allows you to modify the host used for link hrefs.  You may want to use this if you have a custom domain name for your S3 bucket, or if you want to leverage things like "virtual files" (like 301 redirects).
+This variable is required. You need to configure Custom Domain on CloudFlare.
 
-Normally your links will point to `<BUCKET_URL>/<KEY>`.  If specified, your links will point to `<BUCKET_WEBSITE_URL>/<KEY>` (but the list API calls will still use the configured `BUCKET_URL`);
+### `READ_ONLY_ACCESS_KEY` variable
 
+This variable is required. You need to create Read only Access Key for your CloudFlare R2 bucket and provide it directly in HTML file.
+
+### `READ_ONLY_SECRET_KEY` variable
+
+This variable is required. You need to create Read only Secret Key for your CloudFlare R2 bucket and provide it directly in HTML file.
 
 ### `S3B_SORT` variable
 
@@ -140,11 +107,6 @@ Valid options:
 - `SMALL2BIG`
 
 
-### `S3B_STAT_DIRS` variable
-
-This will obtain last modified information for directories at the cost of an additional request made per directory. Variable is a boolean.
-
-
 ### `EXCLUDE_FILE` variable
 
 This variable is optional.  It allows you to exclude a file (e.g. index.html) or a list of files from the file listings.
@@ -155,25 +117,9 @@ This variable is optional.  It allows you to exclude a file (e.g. index.html) or
 This variable is optional.  It allows you to automatically set the title.
 
 
-### `S3_REGION` variable
+## Valid Configurations
 
-This variable is optional.  It allows you specify the S3 region that the bucket is in so that the BUCKET_URL and BUCKET_WEBSITE_URL variables will be configured automatcially.
-
-The 'us-east-1' region is unique and would require this variable be set to 's3' for a bucket in that region, buckets in other regions would just have this set to 's3-' + their region name (e.g. 's3-eu-west-1').
-
-E.g. setting S3_REGION to 's3' for a bucket named 'www.example.com' in the us-east-1 region would automatically set:
-
-  BUCKET_URL = 'http://www.example.com.s3.amazonaws.com'
-  BUCKET_WEBSITE_URL = 'http://www.example.com'
-
-
-## Four Valid Configurations
-
-1. Embed into your website
-2. Use Amazon S3 in website mode with URL navigation
-3. Use Amazon S3 in website mode with prefix mode (ignore_path mode)
-4. Use Amazon S3 in non-website mode
-
+1. Use CloudFlare R2 in website mode with custom domain
 
 
 #### 1. Embed into your website
@@ -182,207 +128,45 @@ Mandatory settings:
 
 ```
       var S3BL_IGNORE_PATH = true;
-      var BUCKET_URL = 'https://BUCKET.s3-REGION.amazonaws.com';
+      var BUCKET_NAME = 'kamilkwiaton';
+      var R2_ENDPOINT = 'https://ba8cf10a812d56d3e44525c16b0fe9fd.r2.cloudflarestorage.com';
+      var BUCKET_WEBSITE_URL = 'https://static.kamilkwiaton.com';
+      var READ_ONLY_ACCESS_KEY = '72cc5646f386d06b49fd96021c2da04b';
+      var READ_ONLY_SECRET_KEY = 'c7a4f3e0c76cbc5e1683385f9bd76224f570b6660e711682cf9da6895f9c5884';
 ```
 
 Copy the code into whatever file you want to act as your listing page.
 
+## R2 bucket permissions
 
-#### 2. Use Amazon S3 in website mode with URL navigation
+You must setup the R2 bucket to allow public read access, and create Read credentials
 
-Mandatory settings:
-
-```
-      var S3BL_IGNORE_PATH = false;
-      var BUCKET_URL = 'https://BUCKET.s3-REGION.amazonaws.com';
-```
-
-- Enable website hosting under `Static website hosting` in your S3 bucket settings.
-- Under `Permissions` grant `Everyone` the `List` and `View` permissions.
-- Under `Permissions` go to `Edit CORS Configuration` and add the configuration listed in the following section 'S3 website bucket permissions'
-- Enter `index.html` as your `Index Document` and `Error Document`.
-- Put _index.html_ in your bucket.
-- Navigate to _`http://BUCKET.s3-website-REGION.amazonaws.com`_ to access the script.
-
-The _`-website-`_ in the URL is important, as the non-website URL is what serves your XML Bucket List.
-
-<http://docs.aws.amazon.com/AmazonS3/latest/dev/WebsiteEndpoints.html#WebsiteRestEndpointDiff>
-
-A specific example for the EU west region:
-
-* Website endpoint: _`http://example-bucket.s3-website-eu-west-1.amazonaws.com/`_
-* S3 bucket endpoint (for RESTful calls): _`http://example-bucket.s3-eu-west-1.amazonaws.com/`_
-
-Note that US east region is **different** in that the S3 bucket endpoint does not include a location spec but the website version does:
-
-* Website endpoint: _`http://example-bucket.s3-website-us-east-1.amazonaws.com/`_
-* S3 bucket endpoint (for RESTful calls): _`http://example-bucket.s3.amazonaws.com/`_
-
-
-#### 3. Use Amazon S3 in website mode with prefix mode (ignore_path mode)
-
-Mandatory settings:
-```
-      var S3BL_IGNORE_PATH = true;
-      var BUCKET_URL = 'https://BUCKET.s3-REGION.amazonaws.com';
-```
-- Enable website hosting under `Static website hosting` in your S3 bucket settings.
-- Enter `index.html` as your `Index Document` (Error Document is not required).
-- Put _index.html_ in your bucket.
-- Navigate to _`http://BUCKET.s3-website-REGION.amazonaws.com`_ to access the script.
-
-
-#### 4. Use Amazon S3 in non-website mode
-
-Mandatory settings:
-
-```
-      var S3BL_IGNORE_PATH = true;
-      var BUCKET_NAME = 'BUCKET';
-```
-
-- Put _index.html_ in your bucket.
-- Access the bucket via either the virtualhost- or path-style url:
-  - https://BUCKET.s3-REGION.amazonaws.com
-  - https://s3-REGION.amazonaws.com/BUCKET
-
-
-## S3 website bucket permissions
-
-You must setup the S3 website bucket to allow public read access. 
-
-* Grant `Everyone` the `List` and `View` permissions:
-![List & View permissions](https://f.cloud.github.com/assets/227505/2409362/46c90dbe-aaad-11e3-9dee-10e967763770.png) 
- * Alternatively you can assign the following bucket policy if policies are your thing:
-
-```
-{
-    "Version": "2008-10-17",
-    "Statement": [
-        {
-            "Sid": "AllowPublicRead",
-            "Effect": "Allow",
-            "Principal": {
-                "AWS": "*"
-            },
-            "Action": "s3:GetObject",
-            "Resource": "arn:aws:s3:::{your-bucket-name}/*"
-        }
-    ]
-}
-```
-
-If you want to allow read/download only access to a specific set of IP addresses, you can block all public access and assign a bucket policy like below. Note the ListBucket permission is necessary as it allows client access to the bucket XML, which our index.html javascript operates from to generate the listing. See this [AWS article for more information on other policy conditionals](https://aws.amazon.com/premiumsupport/knowledge-center/block-s3-traffic-vpc-ip/).
-```
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "AllowSpecificIPsOnly",
-            "Effect": "Allow",
-            "Principal": "*",
-            "Action": [
-                "s3:GetObject",
-                "s3:ListBucket"
-            ],
-            "Resource": [
-                "arn:aws:s3:::{your-bucket-name}/*",
-                "arn:aws:s3:::{your-bucket-name}"
-            ],
-            "Condition": {
-                "IpAddress": {
-                    "aws:SourceIp": [
-                        "12.34.56.78/24",
-                    ]
-                }
-            }
-        }
-    ]
-}
-```
+* Setups custom domain
+![Custom domain](public_access.png) 
 
 * Assign the following CORS policy
 
 ```
 [
-    {
-        "AllowedHeaders": [
-            "*"
-        ],
-        "AllowedMethods": [
-            "GET"
-        ],
-        "AllowedOrigins": [
-            "*"
-        ],
-        "ExposeHeaders": []
-    }
+  {
+    "AllowedOrigins": [
+      "*"
+    ],
+    "AllowedMethods": [
+      "GET"
+    ]
+  }
 ]
 ```
 
-
-## Enabling HTTPS
-
-You MUST use config 1 or 4. Amazon S3 doesn't support HTTPS in website mode.
-
-Use https for your BUCKET_URL.
-
-For config 4, navigate to your index.html's full path using https, e.g. _`https://BUCKET.s3-REGION.amazonaws.com/index.html`_
-
-To stop browser warnings about displaying insecure content in secure mode:
-- Host the following 3 files in your website/bucket:
-  - _list.js_
-  - https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js
-  - http://assets.okfn.org/images/icons/ajaxload-circle.gif
-- Edit _index.html_ to point to your bucket's `jquery.min.js` & `list.js` file (using relative paths)
-- Edit _list.js_ to point to your bucket's `ajaxload-circle.gif`
-
-With config 4, you will then be utilising AmazonAWS' wildcard SSL (unfortunately it is SHA1 only).
-
-
-### S3 Bucket https only permissions (ie. deny http access)
-
-This is only possible for config 1 or 4.
-
-Set the following bucket policy
-```
-{
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Sid": "HTTPSOnly",
-			"Effect": "Deny",
-			"Principal": "*",
-			"Action": "s3:*",
-			"Resource": "arn:aws:s3:::{your-bucket-name}/*",
-			"Condition": {
-				"Bool": {
-					"aws:SecureTransport": false
-				}
-			}
-		},
-		{
-			"Sid": "AllowPublicRead",
-			"Effect": "Allow",
-			"Principal": "*",
-			"Action": "s3:GetObject",
-			"Resource": "arn:aws:s3:::{your-bucket-name}/*"
-		},
-		{
-			"Sid": "AllowPublicList",
-			"Effect": "Allow",
-			"Principal": "*",
-			"Action": "s3:ListBucket",
-			"Resource": "arn:aws:s3:::{your-bucket-name}"
-		}
-	]
-}
-```
+* Create read only API keys
+![API Keys](api_tokens.png) 
 
 
 ## Copyright and License
 
 Copyright 2012-2016 Rufus Pollock.
+Copyright 2024-2024 Kamil Kwiaton.
 
 Licensed under the MIT license:
 
