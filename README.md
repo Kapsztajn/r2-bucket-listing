@@ -1,3 +1,5 @@
+This is fork of Rufus Pollock S3 Bucket Listing https://github.com/rufuspollock/s3-bucket-listing updated to work with R2 storage on CloudFlare. As I was learning JS doing these changes expect things to break :)
+
 Create nice directory listings for R2 buckets using only javascript and HTML.
 
 The listing can be deployed on any site and can also be deployed into a bucket.
